@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@theme {
+  --color-strava: #FC4C02;
+  --color-brand-blue: #2563eb;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+/* Smooth chart transitions */
+canvas {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
