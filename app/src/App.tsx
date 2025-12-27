@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { fetchStravaGpx } from './strava_utils';
+import { fetchStravaGpx } from './strava_utils.ts';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
