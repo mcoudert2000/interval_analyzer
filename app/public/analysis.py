@@ -111,6 +111,12 @@ def extract_gpx_data(gpx_file: StringIO) -> Union[pd.DataFrame, str]:
     df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
     df["heart_rate"] = pd.to_numeric(df["heart_rate"], errors="coerce")
 
+    if not df.empty and df["time"].notna().any():
+        start_time = df["time"].iloc[0]
+        df["time_since_start_seconds"] = (df["time"] - start_time).dt.total_seconds()
+    else:
+        df["time_since_start_seconds"] = 0
+
     return df
 
 
@@ -480,6 +486,6 @@ def run_analysis(gpx_string: str, params: dict):
             orient="records"
         ),
         "paceData": df_final[
-            ["time", "pace_min_per_km", "interval_type", "pace_lma_min_per_km"]
+            ["time", "time_since_start_seconds", "pace_min_per_km", "interval_type", "pace_lma_min_per_km"]
         ].to_json(orient="records"),
     }
