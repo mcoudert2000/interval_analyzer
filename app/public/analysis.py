@@ -100,6 +100,8 @@ def extract_gpx_data(gpx_file: StringIO) -> Union[pd.DataFrame, str]:
                 "gpxtpx:TrackPointExtension/gpxtpx:hr", ns
             )
             row["heart_rate"] = hr_element.text if hr_element is not None else ""
+        else:
+            row["heart_rate"] = ""
 
         row_list.append(row)
 
@@ -244,7 +246,6 @@ def post_process_intervals(
     pace_threshold: float,
     min_interval_time_seconds: float,
 ) -> pd.DataFrame:
-    # ENTIRE BODY IDENTICAL TO ORIGINAL
     df = df.copy()
 
     df.loc[df["interval_type"] == "Slow Interval", "interval_type"] = "Recovery"
@@ -343,6 +344,9 @@ def summarize_intervals(df: pd.DataFrame) -> pd.DataFrame:
         total_time_seconds = segment["segment_time_seconds"].sum()
         total_distance_km = segment["segment_distance_km"].sum()
 
+        avg_hr = segment["heart_rate"].mean()
+        max_hr = segment["heart_rate"].max()
+
         summary.append(
             {
                 "ID": interval_id,
@@ -355,8 +359,8 @@ def summarize_intervals(df: pd.DataFrame) -> pd.DataFrame:
                 "Average Pace (min/km)": format_pace_min_sec(
                     total_time_seconds, total_distance_km
                 ),
-                "Average Heart Rate (BPM)": round(segment["heart_rate"].mean()),
-                "Max Heart Rate (BPM)": segment["heart_rate"].max(),
+                "Average Heart Rate (BPM)": round(avg_hr) if not pd.isna(avg_hr) else "N/A",
+                "Max Heart Rate (BPM)": round(max_hr) if not pd.isna(avg_hr) else "N/A",
                 "is_real_interval": segment["is_real_interval"].iloc[0],
             }
         )

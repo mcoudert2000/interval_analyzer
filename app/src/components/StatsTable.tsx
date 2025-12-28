@@ -5,10 +5,10 @@ export default function StatsTable({ rows }: { rows: any[] }) {
         <thead className="bg-slate-50 border-b border-slate-100">
           <tr>
             {[
-              'Effort Type',
               'Distance',
+              'Total Time',
               'Avg Pace',
-              'Avg HR',
+              'Avg HR (Max)',
               'Recovery',
             ].map(h => (
               <th
@@ -24,17 +24,17 @@ export default function StatsTable({ rows }: { rows: any[] }) {
         <tbody className="divide-y divide-slate-100">
           {rows.map((row, idx) => (
             <tr key={idx} className="hover:bg-slate-50/50">
-              <td className="px-6 py-4 font-black text-red-600">
-                {row.Type}
-              </td>
               <td className="px-6 py-4 font-mono font-bold">
                 {row['Total Distance (m)']}m
+              </td>
+              <td className="px-6 py-4 font-black font-black">
+                {row['Total Time']}
               </td>
               <td className="px-6 py-4 font-black">
                 {row['Average Pace (min/km)']}
               </td>
               <td className="px-6 py-4 font-black">
-                {row['Average Heart Rate (BPM)']}
+                {row['Average Heart Rate (BPM)']} ({row['Max Heart Rate (BPM)']})
               </td>
               <td className="px-6 py-4 font-black">
                 {row['Recovery Time']}

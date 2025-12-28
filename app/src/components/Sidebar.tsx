@@ -1,3 +1,5 @@
+import RecentRunsPicker from "./RecentRunsPicker";
+
 type Props = {
   accessToken: string | null;
   loading: boolean;
@@ -77,51 +79,147 @@ export default function Sidebar({
 
       {/* Analysis form */}
       <form onSubmit={onAnalyze} className="space-y-6">
-        <input
-          type="url"
-          value={values.stravaUrl}
-          onChange={e => setters.setStravaUrl(e.target.value)}
-          placeholder="Paste Strava link..."
-          className="w-full p-3 rounded-xl border"
-        />
+        {accessToken && (
+          <RecentRunsPicker
+            accessToken={accessToken}
+            onSelect={(activityId) => {
+              setters.setStravaUrl(
+                `https://www.strava.com/activities/${activityId}`
+              );
+            }}
+          />
+        )}
+        <div className="space-y-4">
+  {/* Strava URL */}
+  <div className="space-y-1">
+  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+    Strava Activity Link
+  </label>
 
-        <input
-          type="file"
-          id="gpxFile"
-          accept=".gpx"
-          className="w-full"
-        />
+  <div className="relative">
+    <input
+      type="url"
+      value={values.stravaUrl}
+      onChange={e => setters.setStravaUrl(e.target.value)}
+      placeholder="https://www.strava.com/activities/…"
+      className="w-full p-3 pr-10 rounded-xl border"
+    />
+    {values.stravaUrl && (
+      <button
+        type="button"
+        onClick={() => window.open(values.stravaUrl, "_blank")}
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-blue-500"
+        title="Open in new tab"
+      >
+        🔗
+      </button>
+    )}
+  </div>
+
+  <p className="text-[10px] text-slate-400">
+    Paste a Strava activity URL (optional if selecting a run above)
+  </p>
+</div>
+
+  {/* GPX Upload */}
+  <div className="space-y-1">
+    <label
+      htmlFor="gpxFile"
+      className="text-[10px] font-black uppercase tracking-widest text-slate-500"
+    >
+      GPX File Upload
+    </label>
+    <input
+      type="file"
+      id="gpxFile"
+      accept=".gpx"
+      className="w-full text-xs text-slate-600"
+    />
+    <p className="text-[10px] text-slate-400">
+      Upload a GPX file downloaded from Strava (other formats to come)
+    </p>
+  </div>
+</div>
 
         <div className="grid grid-cols-2 gap-4">
-          <input
-            type="number"
-            value={values.smoothWin}
-            onChange={e => setters.setSmoothWin(+e.target.value)}
-            className="w-full p-2 rounded-lg border"
-            placeholder="Smooth Win"
-          />
-          <input
-            type="number"
-            value={values.lmaWin}
-            onChange={e => setters.setLmaWin(+e.target.value)}
-            className="w-full p-2 rounded-lg border"
-            placeholder="LMA Win"
-          />
-          <input
-            type="number"
-            value={values.paceThreshold}
-            onChange={e => setters.setPaceThreshold(+e.target.value)}
-            className="w-full p-2 rounded-lg border"
-            placeholder="Max Pace"
-          />
-          <input
-            type="number"
-            value={values.minTimeSec}
-            onChange={e => setters.setMinTimeSec(+e.target.value)}
-            className="w-full p-2 rounded-lg border"
-            placeholder="Min Sec"
-          />
-        </div>
+  {/* Smooth Window */}
+  <div className="space-y-1">
+    <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
+      Smoothing Window
+      <span className="group relative cursor-help text-slate-400">
+        ⓘ
+        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
+          Number of points used to smooth instantaneous pace. Higher = smoother but less responsive.
+        </span>
+      </span>
+    </label>
+    <input
+      type="number"
+      value={values.smoothWin}
+      onChange={e => setters.setSmoothWin(+e.target.value)}
+      className="w-full rounded-lg border p-2"
+    />
+  </div>
+
+  {/* LMA Window */}
+  <div className="space-y-1">
+    <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
+      LMA Window
+      <span className="group relative cursor-help text-slate-400">
+        ⓘ
+        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
+          Long moving average window used to detect pace changes between intervals.
+        </span>
+      </span>
+    </label>
+    <input
+      type="number"
+      value={values.lmaWin}
+      onChange={e => setters.setLmaWin(+e.target.value)}
+      className="w-full rounded-lg border p-2"
+    />
+  </div>
+
+  {/* Max Pace */}
+  <div className="space-y-1">
+    <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
+      Max Steady Pace (min/km)
+      <span className="group relative cursor-help text-slate-400">
+        ⓘ
+        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
+          Steady intervals slower than this pace are reclassified as recovery.
+        </span>
+      </span>
+    </label>
+    <input
+      type="number"
+      step="0.1"
+      value={values.paceThreshold}
+      onChange={e => setters.setPaceThreshold(+e.target.value)}
+      className="w-full rounded-lg border p-2"
+    />
+  </div>
+
+  {/* Minimum Time */}
+  <div className="space-y-1">
+    <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
+      Minimum Interval (sec)
+      <span className="group relative cursor-help text-slate-400">
+        ⓘ
+        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
+          Intervals shorter than this duration are merged into adjacent segments.
+        </span>
+      </span>
+    </label>
+    <input
+      type="number"
+      value={values.minTimeSec}
+      onChange={e => setters.setMinTimeSec(+e.target.value)}
+      className="w-full rounded-lg border p-2"
+    />
+  </div>
+</div>
+
 
         <button
           type="submit"
