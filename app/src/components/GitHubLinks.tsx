@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function GitHubLinks() {
   return (
     <div className="fixed bottom-6 right-6 flex gap-3 z-50">

@@ -12,6 +12,7 @@ type Props = {
     lmaWin: number;
     paceThreshold: number;
     minTimeSec: number;
+    minIntervalPacePerKm: number; // Add this line
   };
   setters: {
     setStravaUrl: (v: string) => void;
@@ -19,6 +20,7 @@ type Props = {
     setLmaWin: (v: number) => void;
     setPaceThreshold: (v: number) => void;
     setMinTimeSec: (v: number) => void;
+    setMinIntervalPacePerKm: (v: number) => void; // Add this line
   };
 };
 

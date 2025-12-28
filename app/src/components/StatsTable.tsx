@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function StatsTable({ rows }: { rows: any[] }) {
   const handleCopyStrava = () => {
   const lines = rows.map((row, idx) => {
