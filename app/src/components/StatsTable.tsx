@@ -11,7 +11,7 @@ export default function StatsTable({ rows }: { rows: any[] }) {
     return `${idx + 1}. ${dist} in ${formatTime(row['Total Time'])} (${pace}/km) | Recovery: ${recov}`;
   });
 
-  const text = ['Workout intervals:', '', ...lines, '', 'https://intervalanalyzer.netlify.app/'].join('\n');
+  const text = [...lines, '', 'https://intervalanalyzer.netlify.app/'].join('\n');
 
   navigator.clipboard.writeText(text);
   alert('Table copied to clipboard!');

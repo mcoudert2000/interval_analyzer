@@ -228,6 +228,26 @@ export default function Sidebar({
     />
   </div>
 
+  <div className="space-y-1 relative">
+    <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
+      Min Interval Pace (min/km)
+      <div className="relative">
+        <span className="group cursor-help text-slate-400">ⓘ
+          <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100 pointer-events-none">
+            Intervals slower than this pace will be converted to recovery and removed from results. Use this to filter out warm-up intervals/recovery intervals.
+          </span>
+        </span>
+      </div>
+    </label>
+    <input
+      type="number"
+      step="0.1"
+      value={values.minIntervalPacePerKm}
+      onChange={e => setters.setMinIntervalPacePerKm(+e.target.value)}
+      className="w-full rounded-lg border p-2"
+    />
+  </div>
+
 </div>
 
 

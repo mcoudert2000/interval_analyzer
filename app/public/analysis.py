@@ -14,7 +14,7 @@ MAX_SPEED_KMH_THRESHOLD = 25.0
 SMOOTHING_WINDOW = 5
 PACE_CHANGE_THRESHOLD = 1.5
 LMA_WINDOW = 15
-LOW_PACE_THRESHOLD_MIN_PER_KM = 5.5
+MIN_INTERVAL_PACE_PER_KM = 5.5
 MIN_INTERVAL_TIME_SECONDS = 50
 MIN_DISTANCE_FOR_PACE_KM = 0.02
 
@@ -241,19 +241,22 @@ def identify_intervals(df: pd.DataFrame, lma_window: int) -> pd.DataFrame:
     return df
 
 
-def post_process_intervals(
-    df: pd.DataFrame,
-    pace_threshold: float,
-    min_interval_time_seconds: float,
+def convert_slow_intervals_to_recovery(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df.loc[df["interval_type"] == "Slow Interval", "interval_type"] = "Recovery"
+    df["interval_id"] = (
+            df["interval_type"] != df["interval_type"].shift(1)
+    ).cumsum().fillna(1)
+    return df
+
+
+def convert_low_pace_steady_to_recovery(
+        df: pd.DataFrame,
+        pace_threshold: float
 ) -> pd.DataFrame:
     df = df.copy()
 
-    df.loc[df["interval_type"] == "Slow Interval", "interval_type"] = "Recovery"
-    df["interval_id"] = (
-        df["interval_type"] != df["interval_type"].shift(1)
-    ).cumsum().fillna(1)
-
-    temp_summary_pace = (
+    summary = (
         df.groupby("interval_id")
         .agg(
             total_distance_km=("segment_distance_km", "sum"),
@@ -263,76 +266,170 @@ def post_process_intervals(
         .reset_index()
     )
 
-    temp_summary_pace["pace_min_per_km"] = np.where(
-        temp_summary_pace["total_distance_km"] > 0,
-        (temp_summary_pace["total_time_seconds"] / 60.0)
-        / temp_summary_pace["total_distance_km"],
+    summary["pace_min_per_km"] = np.where(
+        summary["total_distance_km"] > 0,
+        (summary["total_time_seconds"] / 60.0) / summary["total_distance_km"],
         np.nan,
     )
 
-    low_pace_steady_ids = temp_summary_pace[
-        (temp_summary_pace["interval_type"] == "Steady")
-        & (
-            (temp_summary_pace["pace_min_per_km"] >= pace_threshold)
-            | (temp_summary_pace["total_distance_km"] < MIN_DISTANCE_FOR_PACE_KM)
-        )
-    ]["interval_id"].tolist()
+    print(f"DEBUG: All Steady intervals:")
+    steady_intervals = summary[summary["interval_type"] == "Steady"]
+    for _, row in steady_intervals.iterrows():
+        print(
+            f"  ID {row['interval_id']}: {row['total_distance_km']}m, pace={row['pace_min_per_km']:.2f}, threshold={pace_threshold}")
 
-    df.loc[
-        df["interval_id"].isin(low_pace_steady_ids),
-        "interval_type",
-    ] = "Recovery"
+    low_pace_steady_ids = summary[
+        (summary["interval_type"] == "Steady")
+        & (
+                (summary["pace_min_per_km"] > pace_threshold)
+                | (summary["total_distance_km"] < MIN_DISTANCE_FOR_PACE_KM)
+        )
+        ]["interval_id"].tolist()
+
+    print(f"DEBUG: Converting to Recovery: {low_pace_steady_ids}")
+
+
+    df.loc[df["interval_id"].isin(low_pace_steady_ids), "interval_type"] = "Recovery"
 
     df["interval_id"] = (
-        df["interval_type"] != df["interval_type"].shift(1)
+            df["interval_type"] != df["interval_type"].shift(1)
     ).cumsum().fillna(1)
 
-    temp_summary_duration = (
+    return df
+
+
+def remove_leading_and_trailing_recovery(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    summary = (
         df.groupby("interval_id")
-        .agg(
-            total_time_seconds=("segment_time_seconds", "sum"),
-            interval_type=("interval_type", "first"),
-        )
+        .agg(interval_type=("interval_type", "first"))
         .reset_index()
     )
 
-    short_intervals = temp_summary_duration[
-        temp_summary_duration["total_time_seconds"]
-        < min_interval_time_seconds
-    ]
+    intervals_to_remove = []
 
-    for _, row in short_intervals.iterrows():
-        current_id = row["interval_id"]
-        target_id = 2 if current_id == 1 else current_id - 1
+    for _, row in summary.iterrows():
+        if row["interval_type"] == "Recovery":
+            intervals_to_remove.append(row["interval_id"])
+        else:
+            break
 
-        if target_id in temp_summary_duration["interval_id"].values:
-            target_type = temp_summary_duration[
-                temp_summary_duration["interval_id"] == target_id
-            ]["interval_type"].iloc[0]
+    for _, row in summary.iloc[::-1].iterrows():
+        if row["interval_type"] == "Recovery" and row["interval_id"] not in intervals_to_remove:
+            intervals_to_remove.append(row["interval_id"])
+        else:
+            break
 
-            df.loc[
-                df["interval_id"] == current_id,
-                "interval_type",
-            ] = target_type
+    if intervals_to_remove:
+        df = df[~df["interval_id"].isin(intervals_to_remove)].copy()
+        df["interval_id"] = (
+                df["interval_type"] != df["interval_type"].shift(1)
+        ).cumsum().fillna(1)
+
+    return df
+
+
+def merge_short_intervals(
+        df: pd.DataFrame,
+        min_interval_time_seconds: float
+) -> pd.DataFrame:
+    df = df.copy()
+    max_iterations = 100
+    iteration = 0
+
+    while iteration < max_iterations:
+        summary = (
+            df.groupby("interval_id")
+            .agg(
+                total_time_seconds=("segment_time_seconds", "sum"),
+                interval_type=("interval_type", "first"),
+            )
+            .reset_index()
+        )
+
+        short_intervals = summary[
+            summary["total_time_seconds"] < min_interval_time_seconds
+            ].copy()
+
+        if len(short_intervals) == 0:
+            break
+
+        merged_any = False
+        for _, row in short_intervals.iterrows():
+            current_id = row["interval_id"]
+            all_ids = summary["interval_id"].tolist()
+            current_idx = all_ids.index(current_id)
+
+            prev_id = all_ids[current_idx - 1] if current_idx > 0 else None
+            next_id = all_ids[current_idx + 1] if current_idx < len(all_ids) - 1 else None
+
+            target_id = None
+            if prev_id is not None:
+                prev_type = summary[summary["interval_id"] == prev_id]["interval_type"].iloc[0]
+                if prev_type == row["interval_type"]:
+                    target_id = prev_id
+
+            if target_id is None and next_id is not None:
+                next_type = summary[summary["interval_id"] == next_id]["interval_type"].iloc[0]
+                if next_type == row["interval_type"]:
+                    target_id = next_id
+
+            if target_id is None:
+                target_id = prev_id if prev_id is not None else next_id
+
+            if target_id is not None:
+                target_type = summary[summary["interval_id"] == target_id]["interval_type"].iloc[0]
+                df.loc[df["interval_id"] == current_id, "interval_type"] = target_type
+                merged_any = True
+
+        if not merged_any:
+            break
+
+        df["interval_id"] = (
+                df["interval_type"] != df["interval_type"].shift(1)
+        ).cumsum().fillna(1)
+
+        iteration += 1
+
+    return df
+
+
+def mark_real_intervals(
+        df: pd.DataFrame,
+        min_interval_time_seconds: float
+) -> pd.DataFrame:
+    df = df.copy()
 
     df["interval_id"] = (
-        df["interval_type"] != df["interval_type"].shift(1)
+            df["interval_type"] != df["interval_type"].shift(1)
     ).cumsum().fillna(1)
 
-    final_summary = (
+    summary = (
         df.groupby("interval_id")
         .agg(total_time_seconds=("segment_time_seconds", "sum"))
         .reset_index()
     )
 
-    real_interval_ids = final_summary[
-        final_summary["total_time_seconds"]
-        >= min_interval_time_seconds
-    ]["interval_id"].tolist()
+    real_interval_ids = summary[
+        summary["total_time_seconds"] >= min_interval_time_seconds
+        ]["interval_id"].tolist()
 
-    df["is_real_interval"] = df["interval_id"].apply(
-        lambda x: x in real_interval_ids
-    )
+    df["is_real_interval"] = df["interval_id"].isin(real_interval_ids)
+
+    return df
+
+
+def post_process_intervals(
+        df: pd.DataFrame,
+        pace_threshold: float,
+        min_interval_time_seconds: float,
+) -> pd.DataFrame:
+    df = convert_slow_intervals_to_recovery(df)
+    df = convert_low_pace_steady_to_recovery(df, pace_threshold)
+    df = remove_leading_and_trailing_recovery(df)
+    df = merge_short_intervals(df, min_interval_time_seconds)
+    df = mark_real_intervals(df, min_interval_time_seconds)
 
     return df
 
@@ -378,11 +475,16 @@ def summarize_intervals(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------
 
 def run_analysis(gpx_string: str, params: dict):
-    smooth_win = params.get("smooth_win", SMOOTHING_WINDOW)
-    lma_win = params.get("lma_win", LMA_WINDOW)
+    smooth_win = params.get("smoothWin", SMOOTHING_WINDOW)
+    lma_win = params.get("lmaWin", LMA_WINDOW)
     min_segment_time_sec = params.get(
-        "min_segment_time_sec", MIN_INTERVAL_TIME_SECONDS
+        "minTimeSec", MIN_INTERVAL_TIME_SECONDS
     )
+    min_interval_pace_per_km = params.get(
+        "minIntervalPacePerKm", MIN_INTERVAL_PACE_PER_KM
+    )
+
+    print(f"Params: {params}")
 
     df_extracted = extract_gpx_data(StringIO(gpx_string))
     if isinstance(df_extracted, str):
@@ -392,7 +494,6 @@ def run_analysis(gpx_string: str, params: dict):
         df_extracted, window_size=smooth_win
     )
 
-    # IMPORTANT: this line is preserved exactly
     df_processed["pace_lma_min_per_km"] = (
         df_processed["pace_min_per_km"]
         .rolling(window=lma_win, min_periods=1, center=True)
@@ -403,7 +504,7 @@ def run_analysis(gpx_string: str, params: dict):
 
     df_final = post_process_intervals(
         df_intervals,
-        pace_threshold=LOW_PACE_THRESHOLD_MIN_PER_KM,
+        pace_threshold=min_interval_pace_per_km,
         min_interval_time_seconds=min_segment_time_sec,
     )
 
