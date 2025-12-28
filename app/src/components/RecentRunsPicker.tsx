@@ -84,13 +84,13 @@ export default function RecentRunsPicker({ accessToken, onSelect }: Props) {
       </p>
 
       <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-        {activities.map(activity => {
+        {activities.map((activity, idx) => {
           const date = new Date(activity.start_date).toLocaleDateString();
           const km = (activity.distance / 1000).toFixed(1);
 
           return (
             <button
-              key={activity.id}
+              key={`${activity.id}-${idx}`}
               onClick={() => onSelect(activity.id)}
               className="w-full text-left p-2 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300"
             >
