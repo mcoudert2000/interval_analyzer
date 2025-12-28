@@ -150,6 +150,8 @@ export default function App() {
       const resolved = await gpxString;
       if (!resolved) throw new Error('No GPX data found');
 
+      console.log("Starting job with params:", { smoothWin, lmaWin, paceThreshold, minTimeSec })
+
       workerRef.current?.postMessage({
         gpxString: resolved,
         params: { smoothWin, lmaWin, paceThreshold, minTimeSec },

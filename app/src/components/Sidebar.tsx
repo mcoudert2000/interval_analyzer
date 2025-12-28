@@ -141,17 +141,19 @@ export default function Sidebar({
   </div>
 </div>
 
-        <div className="grid grid-cols-2 gap-4">
-  {/* Smooth Window */}
-  <div className="space-y-1">
+        <div className="space-y-4">
+
+  {/* Smoothing Window */}
+  <div className="space-y-1 relative">
     <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
       Smoothing Window
-      <span className="group relative cursor-help text-slate-400">
-        ⓘ
-        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
-          Number of points used to smooth instantaneous pace. Higher = smoother but less responsive.
+      <div className="relative">
+        <span className="group cursor-help text-slate-400">ⓘ
+          <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100 pointer-events-none">
+            Number of points used to smooth instantaneous pace. Higher = smoother but less responsive for finding intervals.
+          </span>
         </span>
-      </span>
+      </div>
     </label>
     <input
       type="number"
@@ -162,15 +164,20 @@ export default function Sidebar({
   </div>
 
   {/* LMA Window */}
-  <div className="space-y-1">
+  <div className="space-y-1 relative">
     <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
       LMA Window
-      <span className="group relative cursor-help text-slate-400">
-        ⓘ
-        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
-          Long moving average window used to detect pace changes between intervals.
+      <div className="relative">
+        <span className="group cursor-help text-slate-400">ⓘ
+          <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100 pointer-events-none">
+            Time in seconds for the long-term rolling average.
+            Higher values will be less sensitive to short pauses within an interval.
+
+            An interval is classified when the long-term moving average significantly deviates
+            from the short term moving average.
+          </span>
         </span>
-      </span>
+      </div>
     </label>
     <input
       type="number"
@@ -180,16 +187,17 @@ export default function Sidebar({
     />
   </div>
 
-  {/* Max Pace */}
-  <div className="space-y-1">
+  {/* Max Steady Pace */}
+  <div className="space-y-1 relative">
     <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
-      Max Steady Pace (min/km)
-      <span className="group relative cursor-help text-slate-400">
-        ⓘ
-        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
-          Steady intervals slower than this pace are reclassified as recovery.
+      Min Pace (min/km)
+      <div className="relative">
+        <span className="group cursor-help text-slate-400">ⓘ
+          <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100 pointer-events-none">
+            Paces slower than this are removed from the chart & classified as paused/recovery.
+          </span>
         </span>
-      </span>
+      </div>
     </label>
     <input
       type="number"
@@ -200,16 +208,17 @@ export default function Sidebar({
     />
   </div>
 
-  {/* Minimum Time */}
-  <div className="space-y-1">
+  {/* Minimum Interval */}
+  <div className="space-y-1 relative">
     <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
       Minimum Interval (sec)
-      <span className="group relative cursor-help text-slate-400">
-        ⓘ
-        <span className="absolute left-1/2 top-full z-10 mt-1 w-56 -translate-x-1/2 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">
-          Intervals shorter than this duration are merged into adjacent segments.
+      <div className="relative">
+        <span className="group cursor-help text-slate-400">ⓘ
+          <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100 pointer-events-none">
+            Intervals shorter than this duration are merged into adjacent segments.
+          </span>
         </span>
-      </span>
+      </div>
     </label>
     <input
       type="number"
@@ -218,7 +227,9 @@ export default function Sidebar({
       className="w-full rounded-lg border p-2"
     />
   </div>
+
 </div>
+
 
 
         <button
