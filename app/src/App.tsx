@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { fetchStravaGpx } from './strava_utils.ts';
 import { Chart, registerables } from 'chart.js';
 
+
 Chart.register(...registerables);
 
 import Sidebar from './components/Sidebar';
 import StatusBanner from './components/StatusBanner';
 import ChartCard from './components/ChartCard';
 import StatsTable from './components/StatsTable';
+import GitHubLinks from './components/GitHubLinks';
+
 
 const CLIENT_ID = '54363';
 const LAMBDA_URL =
@@ -222,6 +225,7 @@ export default function App() {
           </div>
         )}
       </main>
+      <GitHubLinks />
     </div>
   );
 }
