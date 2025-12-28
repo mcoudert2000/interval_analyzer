@@ -201,7 +201,7 @@ export default function Sidebar({
     </label>
     <input
       type="number"
-      step="0.1"
+      step="1"
       value={values.paceThreshold}
       onChange={e => setters.setPaceThreshold(+e.target.value)}
       className="w-full rounded-lg border p-2"
@@ -241,7 +241,7 @@ export default function Sidebar({
     </label>
     <input
       type="number"
-      step="0.1"
+      step="0.5"
       value={values.minIntervalPacePerKm}
       onChange={e => setters.setMinIntervalPacePerKm(+e.target.value)}
       className="w-full rounded-lg border p-2"

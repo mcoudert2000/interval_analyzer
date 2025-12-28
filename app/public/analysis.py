@@ -294,41 +294,7 @@ def convert_low_pace_steady_to_recovery(
     df["interval_id"] = (
             df["interval_type"] != df["interval_type"].shift(1)
     ).cumsum().fillna(1)
-
     return df
-
-
-def remove_leading_and_trailing_recovery(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-
-    summary = (
-        df.groupby("interval_id")
-        .agg(interval_type=("interval_type", "first"))
-        .reset_index()
-    )
-
-    intervals_to_remove = []
-
-    for _, row in summary.iterrows():
-        if row["interval_type"] == "Recovery":
-            intervals_to_remove.append(row["interval_id"])
-        else:
-            break
-
-    for _, row in summary.iloc[::-1].iterrows():
-        if row["interval_type"] == "Recovery" and row["interval_id"] not in intervals_to_remove:
-            intervals_to_remove.append(row["interval_id"])
-        else:
-            break
-
-    if intervals_to_remove:
-        df = df[~df["interval_id"].isin(intervals_to_remove)].copy()
-        df["interval_id"] = (
-                df["interval_type"] != df["interval_type"].shift(1)
-        ).cumsum().fillna(1)
-
-    return df
-
 
 def merge_short_intervals(
         df: pd.DataFrame,
@@ -427,7 +393,6 @@ def post_process_intervals(
 ) -> pd.DataFrame:
     df = convert_slow_intervals_to_recovery(df)
     df = convert_low_pace_steady_to_recovery(df, pace_threshold)
-    df = remove_leading_and_trailing_recovery(df)
     df = merge_short_intervals(df, min_interval_time_seconds)
     df = mark_real_intervals(df, min_interval_time_seconds)
 
