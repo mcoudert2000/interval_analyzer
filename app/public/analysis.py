@@ -7,7 +7,6 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
-
 # --- Configuration Constants ---
 EARTH_RADIUS_KM = 6371.0
 MAX_SPEED_KMH_THRESHOLD = 25.0
@@ -215,10 +214,10 @@ def identify_intervals(df: pd.DataFrame, lma_window: int, pace_difference_thresh
     df = df.copy()
 
     rolling_time_lma = (
-        df["segment_time_seconds"]
-        .rolling(window=lma_window, min_periods=1)
-        .sum()
-        / 60.0
+            df["segment_time_seconds"]
+            .rolling(window=lma_window, min_periods=1)
+            .sum()
+            / 60.0
     )
     rolling_distance_lma = (
         df["segment_distance_km"]
@@ -241,7 +240,7 @@ def identify_intervals(df: pd.DataFrame, lma_window: int, pace_difference_thresh
     ] = "Slow Interval"
 
     df["interval_id"] = (
-        df["interval_type"] != df["interval_type"].shift(1)
+            df["interval_type"] != df["interval_type"].shift(1)
     ).cumsum().fillna(1)
 
     return df
@@ -294,13 +293,13 @@ def convert_low_pace_steady_to_recovery(
 
     print(f"DEBUG: Converting to Recovery: {low_pace_steady_ids}")
 
-
     df.loc[df["interval_id"].isin(low_pace_steady_ids), "interval_type"] = "Recovery"
 
     df["interval_id"] = (
             df["interval_type"] != df["interval_type"].shift(1)
     ).cumsum().fillna(1)
     return df
+
 
 def merge_short_intervals(
         df: pd.DataFrame,
@@ -422,7 +421,7 @@ def summarize_intervals(df: pd.DataFrame) -> pd.DataFrame:
                 "Total Distance (m)": round(
                     (total_distance_km * 1000) / 100
                 )
-                * 100,
+                                      * 100,
                 "Total Time": format_time(total_time_seconds),
                 "Average Pace (min/km)": format_pace_min_sec(
                     total_time_seconds, total_distance_km
@@ -444,19 +443,22 @@ def summarize_intervals(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------
 # 🚀 New Entry Point (ORCHESTRATION ONLY)
 # ---------------------------------------------------------------------
+def read_param(params: dict, key: str, default):
+    val = params.get(key)
+    if not val:
+        val = default
+    return val
+
 
 def run_analysis(gpx_string: str, params: dict):
-    smooth_win = params.get("smoothWin", SMOOTHING_WINDOW)
-    lma_win = params.get("lmaWin", LMA_WINDOW)
-    min_segment_time_sec = params.get(
-        "minTimeSec", MIN_INTERVAL_TIME_SECONDS
-    )
-    min_interval_pace_per_km = params.get(
-        "minIntervalPacePerKm", MIN_INTERVAL_PACE_PER_KM
-    )
-    pace_difference_threshold = params.get(
-        "paceDifferenceThreshold", PACE_DIFFERENCE_THRESHOLD
-    )
+    smooth_win = read_param(params, "smoothWin", SMOOTHING_WINDOW)
+    lma_win = read_param(params, "lmaWin", LMA_WINDOW)
+    min_segment_time_sec = read_param(
+        params,"minTimeSec", MIN_INTERVAL_TIME_SECONDS)
+    min_interval_pace_per_km = read_param(params,
+                                          "minIntervalPacePerKm", MIN_INTERVAL_PACE_PER_KM)
+    pace_difference_threshold = read_param(params,
+                                    "paceDifferenceThreshold", PACE_DIFFERENCE_THRESHOLD)
 
     print(f"Params: {params}")
 
@@ -474,7 +476,8 @@ def run_analysis(gpx_string: str, params: dict):
         .mean()
     )
 
-    df_intervals = identify_intervals(df_processed, lma_window=lma_win, pace_difference_threshold=pace_difference_threshold)
+    df_intervals = identify_intervals(df_processed, lma_window=lma_win,
+                                      pace_difference_threshold=pace_difference_threshold)
 
     df_final = post_process_intervals(
         df_intervals,

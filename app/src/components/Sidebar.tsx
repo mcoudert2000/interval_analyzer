@@ -162,7 +162,7 @@ export default function Sidebar({
     <input
       type="number"
       value={values.smoothWin}
-      onChange={e => setters.setSmoothWin(+e.target.value)}
+      onChange={e => setters.setSmoothWin(e.target.value === '' ? '' : +e.target.value)}
       className="w-full rounded-lg border p-2"
     />
   </div>
@@ -186,7 +186,7 @@ export default function Sidebar({
     <input
       type="number"
       value={values.lmaWin}
-      onChange={e => setters.setLmaWin(+e.target.value)}
+      onChange={e => setters.setLmaWin(e.target.value === '' ? '' : +e.target.value)}
       className="w-full rounded-lg border p-2"
     />
   </div>
@@ -207,7 +207,7 @@ export default function Sidebar({
       type="number"
       step="1"
       value={values.paceThreshold}
-      onChange={e => setters.setPaceThreshold(+e.target.value)}
+      onChange={e => setters.setPaceThreshold(e.target.value === '' ? '' : +e.target.value)}
       className="w-full rounded-lg border p-2"
     />
   </div>
@@ -227,7 +227,7 @@ export default function Sidebar({
     <input
       type="number"
       value={values.minTimeSec}
-      onChange={e => setters.setMinTimeSec(+e.target.value)}
+      onChange={e => setters.setMinTimeSec(e.target.value === '' ? '' : +e.target.value)}
       className="w-full rounded-lg border p-2"
     />
   </div>
@@ -247,7 +247,7 @@ export default function Sidebar({
       type="number"
       step="0.5"
       value={values.minIntervalPacePerKm}
-      onChange={e => setters.setMinIntervalPacePerKm(+e.target.value)}
+      onChange={e => setters.setMinIntervalPacePerKm(e.target.value === '' ? '' : +e.target.value)}
       className="w-full rounded-lg border p-2"
     />
   </div>
@@ -269,15 +269,12 @@ export default function Sidebar({
       type="number"
       step="0.25"
       value={values.paceDifferenceThreshold}
-      onChange={e => setters.setPaceDifferenceThreshold(+e.target.value)}
+      onChange={e => setters.setPaceDifferenceThreshold(e.target.value === '' ? '' : +e.target.value)}
       className="w-full rounded-lg border p-2"
     />
   </div>
 
 </div>
-
-
-
         <button
           type="submit"
           disabled={loading || !workerReady}
