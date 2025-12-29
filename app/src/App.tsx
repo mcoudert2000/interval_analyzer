@@ -30,6 +30,7 @@ export default function App() {
   const [paceThreshold, setPaceThreshold] = useState(10);
   const [minTimeSec, setMinTimeSec] = useState(45);
   const [minIntervalPacePerKm, setMinIntervalPacePerKm] = useState(5);
+  const [paceDifferenceThreshold, setPaceDifferenceThreshold] = useState(1);
 
   // ─── App State ────────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -154,11 +155,11 @@ export default function App() {
       const resolved = await gpxString;
       if (!resolved) throw new Error('No GPX data found');
 
-      console.log("Starting job with params:", { smoothWin, lmaWin, paceThreshold, minTimeSec, minIntervalPacePerKm })
+      console.log("Starting job with params:", { smoothWin, lmaWin, paceThreshold, minTimeSec, minIntervalPacePerKm, paceDifferenceThreshold })
 
       workerRef.current?.postMessage({
         gpxString: resolved,
-        params: { smoothWin, lmaWin, paceThreshold, minTimeSec, minIntervalPacePerKm },
+        params: { smoothWin, lmaWin, paceThreshold, minTimeSec, minIntervalPacePerKm, paceDifferenceThreshold },
       });
     } catch (err: any) {
       setStatus({ message: err.message, type: 'error' });
@@ -182,6 +183,7 @@ export default function App() {
           paceThreshold,
           minTimeSec,
           minIntervalPacePerKm,
+          paceDifferenceThreshold,
         }}
         setters={{
           setStravaUrl,
@@ -190,6 +192,7 @@ export default function App() {
           setPaceThreshold,
           setMinTimeSec,
           setMinIntervalPacePerKm,
+          setPaceDifferenceThreshold,
         }}
       />
 

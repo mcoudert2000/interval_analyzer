@@ -12,7 +12,7 @@ import pandas as pd
 EARTH_RADIUS_KM = 6371.0
 MAX_SPEED_KMH_THRESHOLD = 25.0
 SMOOTHING_WINDOW = 5
-PACE_CHANGE_THRESHOLD = 1.5
+PACE_DIFFERENCE_THRESHOLD = 1
 LMA_WINDOW = 15
 MIN_INTERVAL_PACE_PER_KM = 5.5
 MIN_INTERVAL_TIME_SECONDS = 50
@@ -211,7 +211,7 @@ def calculate_pace_min_per_km(df: pd.DataFrame, window_size: int) -> pd.DataFram
 # Interval Logic (UNCHANGED)
 # ---------------------------------------------------------------------
 
-def identify_intervals(df: pd.DataFrame, lma_window: int) -> pd.DataFrame:
+def identify_intervals(df: pd.DataFrame, lma_window: int, pace_difference_threshold: float) -> pd.DataFrame:
     df = df.copy()
 
     rolling_time_lma = (
@@ -236,7 +236,7 @@ def identify_intervals(df: pd.DataFrame, lma_window: int) -> pd.DataFrame:
 
     df["interval_type"] = "Steady"
     df.loc[
-        df["pace_deviation"] < -PACE_CHANGE_THRESHOLD,
+        df["pace_deviation"] < -pace_difference_threshold,
         "interval_type",
     ] = "Slow Interval"
 
@@ -454,6 +454,9 @@ def run_analysis(gpx_string: str, params: dict):
     min_interval_pace_per_km = params.get(
         "minIntervalPacePerKm", MIN_INTERVAL_PACE_PER_KM
     )
+    pace_difference_threshold = params.get(
+        "paceDifferenceThreshold", PACE_DIFFERENCE_THRESHOLD
+    )
 
     print(f"Params: {params}")
 
@@ -471,7 +474,7 @@ def run_analysis(gpx_string: str, params: dict):
         .mean()
     )
 
-    df_intervals = identify_intervals(df_processed, lma_window=lma_win)
+    df_intervals = identify_intervals(df_processed, lma_window=lma_win, pace_difference_threshold=pace_difference_threshold)
 
     df_final = post_process_intervals(
         df_intervals,

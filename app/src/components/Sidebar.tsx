@@ -12,7 +12,8 @@ type Props = {
     lmaWin: number;
     paceThreshold: number;
     minTimeSec: number;
-    minIntervalPacePerKm: number; // Add this line
+    minIntervalPacePerKm: number;
+    paceDifferenceThreshold: number;
   };
   setters: {
     setStravaUrl: (v: string) => void;
@@ -20,7 +21,8 @@ type Props = {
     setLmaWin: (v: number) => void;
     setPaceThreshold: (v: number) => void;
     setMinTimeSec: (v: number) => void;
-    setMinIntervalPacePerKm: (v: number) => void; // Add this line
+    setMinIntervalPacePerKm: (v: number) => void;
+    setPaceDifferenceThreshold: (v: number) => void;
   };
 };
 
@@ -246,6 +248,28 @@ export default function Sidebar({
       step="0.5"
       value={values.minIntervalPacePerKm}
       onChange={e => setters.setMinIntervalPacePerKm(+e.target.value)}
+      className="w-full rounded-lg border p-2"
+    />
+  </div>
+
+  <div className="space-y-1 relative">
+    <label className="flex items-center gap-1 text-sm font-medium text-slate-700">
+      Pace Difference Threshold
+      <div className="relative">
+        <span className="group cursor-help text-slate-400">ⓘ
+          <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 rounded-md bg-slate-800 p-2 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100 pointer-events-none">
+            How large a difference in pace is needed between the short term & long term average to count as a new interval.
+
+            Lower values means it will be more sensitive to changes in pace.
+          </span>
+        </span>
+      </div>
+    </label>
+    <input
+      type="number"
+      step="0.25"
+      value={values.paceDifferenceThreshold}
+      onChange={e => setters.setPaceDifferenceThreshold(+e.target.value)}
       className="w-full rounded-lg border p-2"
     />
   </div>
